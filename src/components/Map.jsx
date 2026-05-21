@@ -18,16 +18,30 @@ function gradeColor(pct) {
   return '#2d6a4f'
 }
 
+function safeCoord([lon, lat, elev]) {
+  const safeLon = isFinite(lon) ? lon : 0
+  const safeLat = isFinite(lat) ? lat : 0
+  if (!isFinite(lon) || !isFinite(lat)) {
+    console.warn('[Map] coordinate has non-finite lon/lat — substituting 0,0', { lon, lat })
+  }
+  return elev != null && isFinite(elev) ? [safeLon, safeLat, elev] : [safeLon, safeLat]
+}
+
 function buildSegmentCollection(routePayload) {
   if (!routePayload) return EMPTY_COLLECTION
   const { feature, grades } = routePayload
   const coords = feature.geometry.coordinates
   const features = []
   for (let i = 0; i < coords.length - 1; i++) {
+    const grade = grades[i]
+    const safeGrade = grade != null && isFinite(grade) ? grade : 0
+    if (grade !== safeGrade) {
+      console.warn(`[Map] grade[${i}] is ${grade} — substituting 0`)
+    }
     features.push({
       type: 'Feature',
-      geometry: { type: 'LineString', coordinates: [coords[i], coords[i + 1]] },
-      properties: { color: gradeColor(grades[i] ?? 0) },
+      geometry: { type: 'LineString', coordinates: [safeCoord(coords[i]), safeCoord(coords[i + 1])] },
+      properties: { color: gradeColor(safeGrade) },
     })
   }
   return { type: 'FeatureCollection', features }
@@ -100,7 +114,8 @@ export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, fol
         type: 'circle',
         source: 'user-location',
         paint: {
-          'circle-radius': ['get', 'accuracyRadius'],
+          // coalesce guards against null when source holds the empty placeholder feature
+          'circle-radius': ['coalesce', ['get', 'accuracyRadius'], 0],
           'circle-color': '#2563eb',
           'circle-opacity': 0.12,
           'circle-stroke-width': 0,
@@ -126,7 +141,8 @@ export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, fol
         layout: {
           'icon-image': 'user-heading-arrow',
           'icon-size': 1,
-          'icon-rotate': ['get', 'heading'],
+          // coalesce guards against null when source holds the empty placeholder feature
+          'icon-rotate': ['coalesce', ['get', 'heading'], 0],
           'icon-rotation-alignment': 'map',
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,

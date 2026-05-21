@@ -87,21 +87,29 @@ export default function App() {
     fetchRoutes(origin.coords, destination.coords, mode)
       .then((features) => {
         if (cancelled) return
-        const alts = features.map((feature) => {
-          const coords = feature.geometry.coordinates
-          const grades = computeGrades(coords)
-          return {
-            feature,
-            grades,
-            stats: {
-              distance: feature.properties.summary.distance,
-              elevationGain: totalElevationGain(coords),
-              maxGrade: maxGrade(grades),
-            },
-            chartData: buildChartData(coords, grades),
-            steps: extractSteps(feature),
+        const alts = features.map((feature, fi) => {
+          try {
+            const coords = feature.geometry.coordinates
+            const grades = computeGrades(coords)
+            return {
+              feature,
+              grades,
+              stats: {
+                distance: feature.properties.summary.distance,
+                elevationGain: totalElevationGain(coords),
+                maxGrade: maxGrade(grades),
+              },
+              chartData: buildChartData(coords, grades),
+              steps: extractSteps(feature),
+            }
+          } catch (err) {
+            console.warn(`[App] route alternative ${fi} processing error — skipping:`, err)
+            return null
           }
-        })
+        }).filter(Boolean)
+
+        if (alts.length === 0) throw new Error('Route data could not be processed')
+
         setAlternatives(alts)
         setFitBoundsKey((k) => k + 1)
         setHoverCoord(null)

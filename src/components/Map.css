@@ -1,0 +1,52 @@
+.map-container {
+  position: absolute;
+  inset: 0;
+}
+
+/* Lift the bottom-right controls above the sidebar handle on mobile */
+.map-container .maplibregl-ctrl-bottom-right {
+  bottom: 60px;
+}
+
+@media (min-width: 768px) {
+  /* On desktop the sidebar is a side panel — controls sit at the natural corner */
+  .map-container .maplibregl-ctrl-bottom-right {
+    bottom: 0;
+    right: 320px; /* sidebar width */
+  }
+}
+
+/* Locate-me button */
+.map-locate-btn {
+  position: absolute;
+  bottom: 72px;
+  right: 10px;
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+}
+
+.map-locate-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.map-locate-btn:active {
+  background: #f0f0f0;
+}
+
+@media (min-width: 768px) {
+  .map-locate-btn {
+    bottom: 10px;
+    right: 330px;
+  }
+}

@@ -1,0 +1,185 @@
+/* Instruction card — anchored to top of .map-area */
+
+.nav-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+}
+
+/* ── Instruction card ── */
+
+.nav-hud__step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+.nav-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.nav-icon--turn   { color: #2563eb; }
+.nav-icon--depart { color: #2d6a4f; }
+.nav-icon--arrive { color: #c0392b; }
+
+.nav-hud__step-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-hud__instruction {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.25;
+}
+
+.nav-hud__dist-next {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2563eb;
+  margin-top: 4px;
+}
+
+/* ── Off-route banner ── */
+
+.nav-hud__off-route {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: #b45309;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nav-hud__off-route svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* ── Bottom action bar — fixed to viewport bottom (thumb zone) ── */
+
+.nav-hud__bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: #1a3a2a;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.nav-hud__bar-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-hud__remaining {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.nav-hud__eta {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.nav-hud__bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Mute toggle */
+.nav-hud__mute {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-hud__mute svg {
+  width: 22px;
+  height: 22px;
+}
+
+.nav-hud__mute--active {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.nav-hud__mute:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* End button */
+.nav-hud__end {
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+  transition: background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-hud__end:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Desktop: center card + bar over map ── */
+
+@media (min-width: 768px) {
+  .nav-hud__step {
+    margin: 0 auto;
+    width: 400px;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .nav-hud__off-route {
+    margin: 4px auto 0;
+    width: 400px;
+    border-radius: 12px;
+  }
+
+  .nav-hud__bar {
+    left: 50%;
+    right: auto;
+    width: 400px;
+    transform: translateX(-50%);
+    border-radius: 16px 16px 0 0;
+  }
+}

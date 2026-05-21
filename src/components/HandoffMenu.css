@@ -1,0 +1,188 @@
+/* ── Full-screen overlay (position:fixed so it escapes any transformed ancestor) ── */
+
+.handoff-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.handoff-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  animation: handoff-fade 0.2s ease-out;
+}
+
+/* ── Menu sheet — slides up from bottom on mobile ── */
+
+.handoff-menu {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
+  animation: handoff-rise 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@keyframes handoff-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes handoff-rise {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* ── Header ── */
+
+.handoff-menu__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.handoff-menu__title {
+  flex: 1;
+  font-size: 19px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.handoff-menu__close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.handoff-menu__close svg {
+  width: 15px;
+  height: 15px;
+  color: #555;
+}
+
+.handoff-menu__close:active {
+  background: #e2e2e2;
+}
+
+/* ── Honest note ── */
+
+.handoff-menu__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 11px;
+  padding: 11px 13px;
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.handoff-menu__note svg {
+  width: 16px;
+  height: 16px;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── App buttons ── */
+
+.handoff-menu__apps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.handoff-app {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 13px;
+  border-radius: 13px;
+  background: #f7f7f7;
+  text-decoration: none;
+  min-height: 64px;
+  box-sizing: border-box;
+  transition: background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.handoff-app:active {
+  background: #efefef;
+}
+
+.handoff-app__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.handoff-app__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.handoff-app__label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.handoff-app__note {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.35;
+}
+
+.handoff-app__arrow {
+  width: 16px;
+  height: 16px;
+  color: #c0c0c0;
+  flex-shrink: 0;
+}
+
+/* ── Desktop: centered modal ── */
+
+@media (min-width: 768px) {
+  .handoff-overlay {
+    align-items: center;
+  }
+
+  .handoff-menu {
+    width: 420px;
+    border-radius: 18px;
+    padding-bottom: 24px;
+    max-height: 80vh;
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.2);
+    margin: 0;
+  }
+}

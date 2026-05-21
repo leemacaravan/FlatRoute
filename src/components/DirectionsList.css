@@ -1,0 +1,64 @@
+.directions {
+  margin-top: 16px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+}
+
+.directions__heading {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #999;
+  margin: 0 0 4px 4px;
+}
+
+.directions__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.directions__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #f5f5f5;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.directions__step:last-child {
+  border-bottom: none;
+}
+
+/* Maneuver icon */
+.dir-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.dir-icon--nav    { color: #2563eb; }
+.dir-icon--depart { color: #2d6a4f; }
+.dir-icon--arrive { color: #c0392b; }
+
+/* Instruction text */
+.directions__instruction {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #2a2a2a;
+}
+
+/* Distance label */
+.directions__dist {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-top: 1px;
+}

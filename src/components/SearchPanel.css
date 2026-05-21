@@ -1,0 +1,247 @@
+.search-panel {
+  position: relative;
+  z-index: 100;
+  background: #fff;
+  padding: 10px 12px 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Inputs ── */
+
+.search-panel__inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f2f2f2;
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 44px;
+}
+
+.search-field__pin {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.search-field__pin--origin {
+  background: #2d6a4f;
+}
+
+.search-field__pin--dest {
+  background: #c0392b;
+}
+
+.search-field__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px; /* 16px prevents iOS auto-zoom */
+  color: #1a1a1a;
+}
+
+.search-field__input::placeholder {
+  color: #aaa;
+}
+
+/* Hide the browser-native search clear button (we have our own) */
+.search-field__input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.search-field--done {
+  background: #eaf4ed;
+}
+
+.search-field__clear {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #666;
+  transition: background 0.15s;
+}
+
+.search-field__clear:active {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.search-field__clear svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Autocomplete dropdown ── */
+
+.sf-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.sf-wrap .search-field {
+  /* search-field is now inside sf-wrap; keep it full width */
+}
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  list-style: none;
+  overflow: hidden;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.suggestions__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  cursor: pointer;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.suggestions__item:active,
+.suggestions__item:hover {
+  background: #f5f5f5;
+}
+
+.suggestions__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestions__sub {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Loading pulse on the search panel border */
+.search-panel--loading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #2563eb, transparent);
+  animation: loading-bar 1.2s ease-in-out infinite;
+}
+
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── Mode selector ── */
+
+.mode-selector {
+  display: flex;
+  gap: 6px;
+}
+
+.mode-btn {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 10px;
+  background: #f2f2f2;
+  color: #555;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  transition: background 0.15s, color 0.15s;
+  padding: 4px 0;
+}
+
+.mode-btn--active {
+  background: #1a3a2a;
+  color: #fff;
+}
+
+.mode-btn__icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-btn__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mode-btn__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Desktop ── */
+
+@media (min-width: 768px) {
+  .search-panel {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 16px;
+    gap: 12px;
+  }
+
+  .search-panel__inputs {
+    flex-direction: row;
+    flex: 1;
+  }
+
+  .sf-wrap,
+  .search-field {
+    flex: 1;
+  }
+
+  .mode-selector {
+    gap: 4px;
+  }
+
+  .mode-btn {
+    flex-direction: row;
+    gap: 6px;
+    padding: 0 14px;
+    flex: none;
+    min-width: 96px;
+  }
+
+  .mode-btn__label {
+    font-size: 13px;
+  }
+}

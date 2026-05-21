@@ -1,0 +1,43 @@
+.app {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.map-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.location-error {
+  position: absolute;
+  bottom: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #fff4f4;
+  border: 1px solid #fecdca;
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: 13px;
+  color: #b91c1c;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .location-error {
+    bottom: 16px;
+    right: 340px;
+    left: auto;
+    transform: none;
+  }
+}

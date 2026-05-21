@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
-import Map from './components/Map.jsx'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import Map, { MARKER_ICONS } from './components/Map.jsx'
 import SearchPanel from './components/SearchPanel.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import HandoffMenu from './components/HandoffMenu.jsx'
 import NavigationHUD from './components/NavigationHUD.jsx'
+import SavedPanel from './components/SavedPanel.jsx'
+import { useLocalStorage } from './hooks/useLocalStorage.js'
 import { fetchRoutes } from './services/routing.js'
+import { reverseGeocode } from './services/geocoding.js'
 import { watchLocation } from './services/location.js'
 import { speak, cancelSpeech } from './services/voice.js'
 import { haversineMetres, distanceToPolyline } from './utils/geo.js'
@@ -46,7 +49,10 @@ function flattestIdx(alts) {
 export default function App() {
   const [origin, setOrigin] = useState(EMPTY_PLACE)
   const [destination, setDestination] = useState(EMPTY_PLACE)
+  const [waypoints, setWaypoints] = useState([])
   const [mode, setMode] = useState('driving')
+
+  const waypointCoordsKey = waypoints.map(w => w.coords?.join(',') ?? '').join('|')
 
   // Each alternative: { feature, grades, stats: { distance, elevationGain, maxGrade }, chartData, steps }
   const [alternatives, setAlternatives] = useState([])
@@ -59,9 +65,13 @@ export default function App() {
   const [handoffOpen, setHandoffOpen] = useState(false)
   const [userLocation, setUserLocation] = useState(null)
   const [locationError, setLocationError] = useState(null)
+  const [mapPickTarget, setMapPickTarget] = useState(null)
   const [navActive, setNavActive] = useState(false)
   const [navStepIdx, setNavStepIdx] = useState(0)
-  const [muted, setMuted] = useState(false)
+  const [muted, setMuted] = useLocalStorage('muted', false)
+  const [markerIcon, setMarkerIcon] = useLocalStorage('markerIcon', 'dot')
+  const [savedRoutes, setSavedRoutes] = useLocalStorage('savedRoutes', [])
+  const [savedPanelOpen, setSavedPanelOpen] = useState(false)
   // Refs to track what voice has already announced — avoids re-announcing on every GPS pulse
   const lastAnnouncedStepRef = useRef(-1)
   const lastAnnouncedBucketRef = useRef(null) // '200' | '50' | null
@@ -84,7 +94,8 @@ export default function App() {
     setRouteLoading(true)
     setRouteError(null)
 
-    fetchRoutes(origin.coords, destination.coords, mode)
+    const validWaypointCoords = waypoints.filter(w => w.coords).map(w => w.coords)
+    fetchRoutes(origin.coords, destination.coords, mode, validWaypointCoords)
       .then((features) => {
         if (cancelled) return
         const alts = features.map((feature, fi) => {
@@ -96,6 +107,7 @@ export default function App() {
               grades,
               stats: {
                 distance: feature.properties.summary.distance,
+                duration: feature.properties.summary.duration,
                 elevationGain: totalElevationGain(coords),
                 maxGrade: maxGrade(grades),
               },
@@ -125,7 +137,7 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [origin.coords, destination.coords, mode])
+  }, [origin.coords, destination.coords, mode, waypointCoordsKey])
 
   useEffect(() => {
     return watchLocation(
@@ -236,6 +248,67 @@ export default function App() {
     }
   }, [navActive, muted, navComputed, navStepIdx, activeAlt])
 
+  const handleMapPick = useCallback(async (coords) => {
+    const name = await reverseGeocode(coords[0], coords[1])
+    setMapPickTarget((target) => {
+      if (target === 'origin') setOrigin({ text: name, coords })
+      else if (target === 'destination') setDestination({ text: name, coords })
+      else if (target?.startsWith('waypoint-')) {
+        const idx = parseInt(target.slice(9), 10)
+        setWaypoints((prev) => prev.map((w, i) => i === idx ? { text: name, coords } : w))
+      }
+      return null
+    })
+  }, [])
+
+  function addWaypoint() {
+    setWaypoints((prev) => [...prev, EMPTY_PLACE])
+  }
+
+  function removeWaypoint(idx) {
+    setWaypoints((prev) => prev.filter((_, i) => i !== idx))
+  }
+
+  function changeWaypoint(idx, place) {
+    setWaypoints((prev) => prev.map((w, i) => i === idx ? place : w))
+  }
+
+  function moveWaypoint(idx, direction) {
+    setWaypoints((prev) => {
+      const next = [...prev]
+      const target = idx + direction
+      if (target < 0 || target >= next.length) return prev
+      ;[next[idx], next[target]] = [next[target], next[idx]]
+      return next
+    })
+  }
+
+  function saveRoute() {
+    if (!activeAlt) return
+    const saved = {
+      id: crypto.randomUUID(),
+      name: `${origin.text} → ${destination.text}`,
+      mode,
+      origin,
+      destination,
+      waypoints,
+      savedAt: Date.now(),
+    }
+    setSavedRoutes((prev) => [saved, ...prev])
+  }
+
+  function deleteSavedRoute(id) {
+    setSavedRoutes((prev) => prev.filter((r) => r.id !== id))
+  }
+
+  function loadSavedRoute(saved) {
+    setOrigin(saved.origin)
+    setDestination(saved.destination)
+    setWaypoints(saved.waypoints ?? [])
+    setMode(saved.mode ?? 'driving')
+    setSavedPanelOpen(false)
+  }
+
   function startNav() {
     lastAnnouncedStepRef.current = -1
     lastAnnouncedBucketRef.current = null
@@ -260,9 +333,17 @@ export default function App() {
         setOrigin={setOrigin}
         destination={destination}
         setDestination={setDestination}
+        waypoints={waypoints}
+        onAddWaypoint={addWaypoint}
+        onRemoveWaypoint={removeWaypoint}
+        onChangeWaypoint={changeWaypoint}
+        onMoveWaypoint={moveWaypoint}
         mode={mode}
         setMode={setMode}
         loading={routeLoading}
+        mapPickTarget={mapPickTarget}
+        onMapPickRequest={setMapPickTarget}
+        onOpenSaved={() => setSavedPanelOpen(true)}
       />
       <div className="map-area">
         <Map
@@ -271,7 +352,25 @@ export default function App() {
           fitBoundsKey={fitBoundsKey}
           userLocation={userLocation}
           followUser={navActive}
+          pickTarget={mapPickTarget}
+          onMapPick={handleMapPick}
+          markerIcon={markerIcon}
+          onMarkerIconChange={setMarkerIcon}
         />
+
+        {mapPickTarget && (
+          <div className="map-pick-banner" role="alert">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+            </svg>
+            Tap map to set {mapPickTarget === 'origin' ? 'start' : mapPickTarget === 'destination' ? 'destination' : `stop ${parseInt(mapPickTarget?.slice(9) ?? '0', 10) + 1}`}
+            <button className="map-pick-banner__cancel" onClick={() => setMapPickTarget(null)} aria-label="Cancel map pick">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="14" height="14">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         {navActive && activeAlt && (
           <NavigationHUD
@@ -307,6 +406,7 @@ export default function App() {
           steepWarning={steepWarning}
           mode={mode}
           onStartNav={startNav}
+          onSaveRoute={saveRoute}
           onHandoffOpen={() => setHandoffOpen(true)}
           loading={routeLoading}
           error={routeError}
@@ -315,11 +415,21 @@ export default function App() {
 
       {handoffOpen && activeAlt && (
         <HandoffMenu
-          coords={activeAlt.feature.geometry.coordinates}
+          origin={origin}
+          destination={destination}
+          userWaypoints={waypoints.filter(w => w.coords)}
           mode={mode}
           onClose={() => setHandoffOpen(false)}
         />
       )}
+
+      <SavedPanel
+        open={savedPanelOpen}
+        onClose={() => setSavedPanelOpen(false)}
+        routes={savedRoutes}
+        onLoad={loadSavedRoute}
+        onDelete={deleteSavedRoute}
+      />
     </div>
   )
 }

@@ -289,6 +289,31 @@
   transform: scale(0.98);
 }
 
+/* Save route button */
+.sidebar__save-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 13px;
+  background: #f0f0f0;
+  color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar__save-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sidebar__save-btn:active {
+  background: #e2e2e2;
+  transform: scale(0.97);
+}
+
 /* Open in... trigger */
 .sidebar__handoff-btn {
   width: 54px;

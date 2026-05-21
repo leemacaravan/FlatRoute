@@ -4,6 +4,15 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { getTileStyle } from '../services/tiles.js'
 import './Map.css'
 
+export const MARKER_ICONS = [
+  { id: 'dot',    label: 'Dot',    emoji: null },
+  { id: 'car',    label: 'Car',    emoji: '🚗' },
+  { id: 'bike',   label: 'Bike',   emoji: '🚴' },
+  { id: 'walk',   label: 'Walker', emoji: '🚶' },
+  { id: 'star',   label: 'Star',   emoji: '⭐' },
+  { id: 'paw',    label: 'Paw',    emoji: '🐾' },
+]
+
 const SF_CENTER = [-122.4194, 37.7749]
 const SF_ZOOM = 13
 
@@ -47,14 +56,16 @@ function buildSegmentCollection(routePayload) {
   return { type: 'FeatureCollection', features }
 }
 
-export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, followUser }) {
+export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, followUser, pickTarget, onMapPick, markerIcon, onMarkerIconChange }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const originMarkerRef = useRef(null)
   const destMarkerRef = useRef(null)
+  const userHtmlMarkerRef = useRef(null)
   const prevFeatureRef = useRef(null)
   const userLocationRef = useRef(null)
   const [mapReady, setMapReady] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   // Create map once on mount
   useEffect(() => {
@@ -165,6 +176,11 @@ export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, fol
       ctx.fill()
       map.addImage('user-heading-arrow', ctx.getImageData(0, 0, size, size))
 
+      // HTML marker element for custom emoji icons
+      const markerEl = document.createElement('div')
+      markerEl.className = 'user-marker'
+      userHtmlMarkerRef.current = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
+
       setMapReady(true)
     })
 
@@ -173,6 +189,7 @@ export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, fol
     return () => {
       originMarkerRef.current?.remove()
       destMarkerRef.current?.remove()
+      userHtmlMarkerRef.current?.remove()
       map.remove()
     }
   }, [])
@@ -252,10 +269,11 @@ export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, fol
 
     userLocationRef.current = userLocation ?? null
 
+    const htmlMarker = userHtmlMarkerRef.current
+    const isDot = markerIcon === 'dot'
+
     if (userLocation) {
       const { lat, lon, heading, accuracy } = userLocation
-      // Convert accuracy (metres) to approximate pixel radius at this zoom level.
-      // We store it as a property and use a fixed zoom-based estimate via map projection.
       const metersPerPixel =
         (156543.03392 * Math.cos((lat * Math.PI) / 180)) /
         Math.pow(2, map.getZoom())
@@ -264,25 +282,56 @@ export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, fol
       src.setData({
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [lon, lat] },
-        properties: {
-          heading: heading ?? 0,
-          accuracyRadius,
-        },
+        properties: { heading: heading ?? 0, accuracyRadius },
       })
       const hasHeading = heading !== null && heading !== undefined
       map.setLayoutProperty('user-location-accuracy', 'visibility', 'visible')
-      map.setLayoutProperty('user-location-dot', 'visibility', 'visible')
+      map.setLayoutProperty('user-location-dot', 'visibility', isDot ? 'visible' : 'none')
       map.setLayoutProperty('user-location-heading', 'visibility', hasHeading ? 'visible' : 'none')
+
+      // Custom emoji marker
+      if (htmlMarker) {
+        const iconDef = MARKER_ICONS.find(i => i.id === markerIcon)
+        const el = htmlMarker.getElement()
+        el.textContent = iconDef?.emoji ?? ''
+        el.setAttribute('data-icon', markerIcon)
+        if (!isDot && iconDef?.emoji) {
+          htmlMarker.setLngLat([lon, lat]).addTo(map)
+        } else {
+          htmlMarker.remove()
+        }
+      }
 
       if (followUser) {
         map.easeTo({ center: [lon, lat], zoom: 17, duration: 500 })
       }
     } else {
+      htmlMarker?.remove()
       map.setLayoutProperty('user-location-accuracy', 'visibility', 'none')
       map.setLayoutProperty('user-location-dot', 'visibility', 'none')
       map.setLayoutProperty('user-location-heading', 'visibility', 'none')
     }
-  }, [mapReady, userLocation, followUser])
+  }, [mapReady, userLocation, followUser, markerIcon])
+
+  // Map-tap-to-pick: crosshair cursor + one-shot click handler
+  useEffect(() => {
+    if (!mapReady) return
+    const map = mapRef.current
+    if (!pickTarget) {
+      map.getCanvas().style.cursor = ''
+      return
+    }
+    map.getCanvas().style.cursor = 'crosshair'
+    function handleClick(e) {
+      const { lng, lat } = e.lngLat
+      if (onMapPick) onMapPick([lng, lat])
+    }
+    map.once('click', handleClick)
+    return () => {
+      map.off('click', handleClick)
+      if (mapRef.current) mapRef.current.getCanvas().style.cursor = ''
+    }
+  }, [mapReady, pickTarget, onMapPick])
 
   // Show/hide hover point on elevation chart interaction
   useEffect(() => {
@@ -316,12 +365,47 @@ export default function Map({ route, hoverCoord, fitBoundsKey, userLocation, fol
         aria-label="Center map on my location"
         title="My location"
       >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-            <circle cx="12" cy="12" r="8" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+          <circle cx="12" cy="12" r="8" />
+        </svg>
+      </button>
+
+      <button
+        className="map-icon-btn"
+        onClick={() => setPickerOpen((o) => !o)}
+        aria-label="Choose location marker icon"
+        title="Change marker"
+        aria-expanded={pickerOpen}
+      >
+        {MARKER_ICONS.find((i) => i.id === markerIcon)?.emoji ?? (
+          <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" width="14" height="14">
+            <circle cx="6" cy="6" r="5" />
           </svg>
-        </button>
+        )}
+      </button>
+
+      {pickerOpen && (
+        <div className="map-icon-picker" role="dialog" aria-label="Choose marker icon">
+          {MARKER_ICONS.map((icon) => (
+            <button
+              key={icon.id}
+              className={`map-icon-picker__opt${markerIcon === icon.id ? ' map-icon-picker__opt--active' : ''}`}
+              onClick={() => { onMarkerIconChange(icon.id); setPickerOpen(false) }}
+              aria-label={icon.label}
+              aria-pressed={markerIcon === icon.id}
+              title={icon.label}
+            >
+              {icon.emoji ?? (
+                <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" width="14" height="14">
+                  <circle cx="6" cy="6" r="5" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

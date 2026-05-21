@@ -13,6 +13,7 @@ export async function geocodeAutocomplete(text) {
     size: 6,
     'focus.point.lat': FOCUS.lat,
     'focus.point.lon': FOCUS.lon,
+    layers: 'venue,address,street,neighbourhood,locality',
   })
 
   try {
@@ -22,5 +23,28 @@ export async function geocodeAutocomplete(text) {
     return data.features ?? []
   } catch {
     return []
+  }
+}
+
+// Returns the best short name for a [lon, lat] coordinate, or 'My Location' on failure.
+export async function reverseGeocode(lon, lat) {
+  const key = import.meta.env.VITE_ORS_KEY
+  if (!key) return 'My Location'
+
+  const params = new URLSearchParams({
+    api_key: key,
+    'point.lon': lon,
+    'point.lat': lat,
+    size: 1,
+  })
+
+  try {
+    const res = await fetch(`${ORS_BASE}/geocode/reverse?${params}`)
+    if (!res.ok) return 'My Location'
+    const data = await res.json()
+    const props = data.features?.[0]?.properties
+    return props?.name ?? props?.label ?? 'My Location'
+  } catch {
+    return 'My Location'
   }
 }

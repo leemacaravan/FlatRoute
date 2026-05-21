@@ -33,12 +33,16 @@ function AppButton({ href, bgColor, letter, label, note }) {
   )
 }
 
-export default function HandoffMenu({ coords, mode, onClose }) {
+export default function HandoffMenu({ origin, destination, userWaypoints, mode, onClose }) {
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  const hasStops = userWaypoints.length > 0
+  const stopCount = userWaypoints.length
+  const stopLabel = stopCount === 1 ? '1 stop' : `${stopCount} stops`
 
   return (
     <div
@@ -71,30 +75,32 @@ export default function HandoffMenu({ coords, mode, onClose }) {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
           </svg>
           <span>
-            External apps may recalculate onto a hillier route. Google Maps receives
-            waypoints to stay close to our flat path — Apple Maps and Waze don't
-            support them, so they may diverge. For the exact route, use{' '}
-            <strong>Go</strong>.
+            External apps will re-plan with their own router and may choose a hillier path.
+            For the exact flat route, use <strong>Go</strong>.
           </span>
         </div>
 
         <div className="handoff-menu__apps">
           <AppButton
-            href={buildGoogleMapsUrl(coords, mode)}
+            href={buildGoogleMapsUrl(origin, destination, userWaypoints, mode)}
             bgColor="#4285F4"
             letter="G"
             label="Google Maps"
-            note="With up to 5 waypoints to preserve your flat route"
+            note={
+              hasStops
+                ? `With your ${stopLabel} — may still choose a hillier path`
+                : 'Origin + destination only — may choose a hillier path'
+            }
           />
           <AppButton
-            href={buildAppleMapsUrl(coords, mode)}
+            href={buildAppleMapsUrl(origin, destination, mode)}
             bgColor="#007AFF"
             letter="A"
             label="Apple Maps"
             note="Origin + destination only — may choose a hillier path"
           />
           <AppButton
-            href={buildWazeUrl(coords)}
+            href={buildWazeUrl(destination)}
             bgColor="#09BDDE"
             letter="W"
             label="Waze"

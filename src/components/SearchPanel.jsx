@@ -1,35 +1,47 @@
 import { useState, useEffect, useRef } from 'react'
-import { geocodeAutocomplete } from '../services/geocoding.js'
+import { geocodeAutocomplete, reverseGeocode } from '../services/geocoding.js'
+import { getCurrentLocation } from '../services/location.js'
 import './SearchPanel.css'
 
-// Strip the name from the full label to get just the context portion
-function sublabel({ name, label }) {
+// Build the secondary line shown under each suggestion's name.
+// Prefers structured fields (street, neighbourhood, locality) over the raw label.
+function sublabel({ name, label, street, housenumber, neighbourhood, locality }) {
+  const parts = []
+  const streetAddr = [housenumber, street].filter(Boolean).join(' ')
+  if (streetAddr && street && !name.includes(street)) parts.push(streetAddr)
+  if (neighbourhood && neighbourhood !== name) parts.push(neighbourhood)
+  if (locality && locality !== name) parts.push(locality)
+  if (parts.length > 0) return parts.join(', ')
   if (!label) return ''
   const rest = label.startsWith(name) ? label.slice(name.length).replace(/^,\s*/, '') : label
-  return rest
+  return rest.replace(/,\s*(United States of America|United Kingdom|Canada|Australia)$/i, '').trim()
 }
 
-function SearchField({ value, onChange, placeholder, pinClass, label }) {
+function SearchField({ value, onChange, placeholder, pinClass, label, fieldId, isPickTarget, onMapPickRequest }) {
   const [suggestions, setSuggestions] = useState([])
   const [open, setOpen] = useState(false)
+  const [fetching, setFetching] = useState(false)
+  const [locating, setLocating] = useState(false)
   const timerRef = useRef(null)
   const wrapperRef = useRef(null)
+  const inputRef = useRef(null)
 
   function handleInput(text) {
     onChange({ text, coords: null })
     clearTimeout(timerRef.current)
-
     if (text.trim().length < 2) {
       setSuggestions([])
       setOpen(false)
+      setFetching(false)
       return
     }
-
     setOpen(true)
+    setFetching(true)
     timerRef.current = setTimeout(async () => {
       const results = await geocodeAutocomplete(text)
       setSuggestions(results)
-    }, 350)
+      setFetching(false)
+    }, 250)
   }
 
   function handleSelect(feature) {
@@ -43,10 +55,25 @@ function SearchField({ value, onChange, placeholder, pinClass, label }) {
     onChange({ text: '', coords: null })
     setSuggestions([])
     setOpen(false)
+    setFetching(false)
     clearTimeout(timerRef.current)
+    inputRef.current?.focus()
   }
 
-  // Close dropdown when user taps/clicks outside this field
+  async function handleLocate() {
+    setLocating(true)
+    try {
+      const { lat, lon } = await getCurrentLocation()
+      const name = await reverseGeocode(lon, lat)
+      onChange({ text: name, coords: [lon, lat] })
+      setOpen(false)
+    } catch {
+      // fail silently — user can type instead
+    } finally {
+      setLocating(false)
+    }
+  }
+
   useEffect(() => {
     function onPointerDown(e) {
       if (!wrapperRef.current?.contains(e.target)) setOpen(false)
@@ -55,13 +82,38 @@ function SearchField({ value, onChange, placeholder, pinClass, label }) {
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [])
 
-  const showDropdown = open && suggestions.length > 0
+  const isEmpty = !value.text
+  const showDropdown = open && value.text.trim().length >= 2
+  const showNoResults = showDropdown && !fetching && suggestions.length === 0
 
   return (
     <div ref={wrapperRef} className="sf-wrap">
-      <div className={`search-field${value.coords ? ' search-field--done' : ''}`}>
-        <span className={`search-field__pin ${pinClass}`} aria-hidden="true" />
+      <div className={[
+        'search-field',
+        value.coords ? 'search-field--done' : '',
+        isPickTarget ? 'search-field--picking' : '',
+      ].filter(Boolean).join(' ')}>
+
+        {/* Left side: GPS button when empty, colored pin when something is entered */}
+        {isEmpty ? (
+          <button
+            className={`search-field__locate${locating ? ' search-field__locate--spin' : ''}`}
+            onClick={handleLocate}
+            disabled={locating}
+            aria-label={`Use current location for ${label}`}
+            title="Use my current location"
+          >
+            {locating
+              ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" /><circle cx="12" cy="12" r="10" strokeOpacity="0.2" /></svg>
+              : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /><circle cx="12" cy="12" r="8" /></svg>
+            }
+          </button>
+        ) : (
+          <span className={`search-field__pin ${pinClass}`} aria-hidden="true" />
+        )}
+
         <input
+          ref={inputRef}
           type="search"
           className="search-field__input"
           placeholder={placeholder}
@@ -70,12 +122,26 @@ function SearchField({ value, onChange, placeholder, pinClass, label }) {
           onFocus={() => { if (suggestions.length > 0) setOpen(true) }}
           aria-label={label}
           aria-autocomplete="list"
-          aria-expanded={showDropdown}
+          aria-expanded={showDropdown || showNoResults}
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
         />
-        {value.text && (
+
+        {/* Map-pick toggle */}
+        <button
+          className={`search-field__mappick${isPickTarget ? ' search-field__mappick--active' : ''}`}
+          onClick={() => onMapPickRequest(isPickTarget ? null : fieldId)}
+          aria-label={`Tap on map to set ${label}`}
+          title="Tap on map"
+          aria-pressed={isPickTarget}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+          </svg>
+        </button>
+
+        {!isEmpty && (
           <button className="search-field__clear" onClick={handleClear} aria-label={`Clear ${label}`}>
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
@@ -84,15 +150,16 @@ function SearchField({ value, onChange, placeholder, pinClass, label }) {
         )}
       </div>
 
-      {showDropdown && (
+      {(showDropdown || showNoResults) && (
         <ul className="suggestions" role="listbox" aria-label={`${label} suggestions`}>
+          {fetching && suggestions.length === 0 && (
+            <li className="suggestions__status" role="presentation">Searching…</li>
+          )}
           {suggestions.map((f) => (
             <li
               key={f.properties.gid}
               role="option"
               className="suggestions__item"
-              // mousedown fires before blur; preventDefault keeps the input focused
-              // so the click can complete before the dropdown hides
               onMouseDown={(e) => { e.preventDefault(); handleSelect(f) }}
               onTouchEnd={(e) => { e.preventDefault(); handleSelect(f) }}
             >
@@ -100,6 +167,11 @@ function SearchField({ value, onChange, placeholder, pinClass, label }) {
               <span className="suggestions__sub">{sublabel(f.properties)}</span>
             </li>
           ))}
+          {showNoResults && (
+            <li className="suggestions__status suggestions__status--empty" role="presentation">
+              No results found
+            </li>
+          )}
         </ul>
       )}
     </div>
@@ -143,12 +215,33 @@ export default function SearchPanel({
   setOrigin,
   destination,
   setDestination,
+  waypoints,
+  onAddWaypoint,
+  onRemoveWaypoint,
+  onChangeWaypoint,
+  onMoveWaypoint,
   mode,
   setMode,
   loading,
+  mapPickTarget,
+  onMapPickRequest,
+  onOpenSaved,
 }) {
+  const hasStops = waypoints.length > 0
+
+  function handleSwap() {
+    setOrigin(destination)
+    setDestination(origin)
+  }
+
+  const panelClass = [
+    'search-panel',
+    loading ? 'search-panel--loading' : '',
+    hasStops ? 'search-panel--has-stops' : '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <header className={`search-panel${loading ? ' search-panel--loading' : ''}`}>
+    <header className={panelClass}>
       <div className="search-panel__inputs">
         <SearchField
           value={origin}
@@ -156,14 +249,95 @@ export default function SearchPanel({
           placeholder="From…"
           pinClass="search-field__pin--origin"
           label="Origin"
+          fieldId="origin"
+          isPickTarget={mapPickTarget === 'origin'}
+          onMapPickRequest={onMapPickRequest}
         />
+
+        {!hasStops && (
+          <div className="search-panel__swap-row">
+            <button
+              className="swap-btn"
+              onClick={handleSwap}
+              aria-label="Swap origin and destination"
+              title="Swap"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {waypoints.map((wp, i) => (
+          <div key={i} className="waypoint-row">
+            <div className="waypoint-row__order">
+              {waypoints.length > 1 && (
+                <>
+                  <button
+                    className="waypoint-row__move"
+                    onClick={() => onMoveWaypoint(i, -1)}
+                    disabled={i === 0}
+                    aria-label={`Move stop ${i + 1} up`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="14" height="14">
+                      <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+                    </svg>
+                  </button>
+                  <button
+                    className="waypoint-row__move"
+                    onClick={() => onMoveWaypoint(i, 1)}
+                    disabled={i === waypoints.length - 1}
+                    aria-label={`Move stop ${i + 1} down`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="14" height="14">
+                      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="waypoint-row__field">
+              <SearchField
+                value={wp}
+                onChange={(place) => onChangeWaypoint(i, place)}
+                placeholder={`Stop ${i + 1}…`}
+                pinClass="search-field__pin--waypoint"
+                label={`Stop ${i + 1}`}
+                fieldId={`waypoint-${i}`}
+                isPickTarget={mapPickTarget === `waypoint-${i}`}
+                onMapPickRequest={onMapPickRequest}
+              />
+            </div>
+            <button
+              className="waypoint-row__remove"
+              onClick={() => onRemoveWaypoint(i)}
+              aria-label={`Remove stop ${i + 1}`}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+              </svg>
+            </button>
+          </div>
+        ))}
+
         <SearchField
           value={destination}
           onChange={setDestination}
           placeholder="To…"
           pinClass="search-field__pin--dest"
           label="Destination"
+          fieldId="destination"
+          isPickTarget={mapPickTarget === 'destination'}
+          onMapPickRequest={onMapPickRequest}
         />
+
+        <button className="add-stop-btn" onClick={onAddWaypoint} aria-label="Add a stop">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+          </svg>
+          Add stop
+        </button>
       </div>
       <div className="mode-selector" role="group" aria-label="Travel mode">
         {MODES.map(({ value, label, icon }) => (
@@ -178,6 +352,16 @@ export default function SearchPanel({
             <span className="mode-btn__label">{label}</span>
           </button>
         ))}
+        <button
+          className="mode-saved-btn"
+          onClick={onOpenSaved}
+          aria-label="Saved routes"
+          title="Saved routes"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" />
+          </svg>
+        </button>
       </div>
     </header>
   )

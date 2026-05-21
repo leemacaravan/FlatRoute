@@ -143,20 +143,21 @@
 /* End button */
 .nav-hud__end {
   height: 44px;
-  padding: 0 22px;
+  padding: 0 24px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.15);
+  background: #dc2626;
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   flex-shrink: 0;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
   transition: background 0.12s;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.45);
   -webkit-tap-highlight-color: transparent;
 }
 
 .nav-hud__end:active {
-  background: rgba(255, 255, 255, 0.3);
+  background: #b91c1c;
 }
 
 /* ── Desktop: center card + bar over map ── */

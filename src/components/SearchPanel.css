@@ -14,17 +14,20 @@
 .search-panel__inputs {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  position: relative;
 }
 
 .search-field {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: #f2f2f2;
   border-radius: 10px;
-  padding: 0 12px;
+  padding: 0 10px 0 8px;
   height: 44px;
+  transition: border 0.15s, background 0.15s;
+  border: 2px solid transparent;
 }
 
 .search-field__pin {
@@ -40,6 +43,36 @@
 
 .search-field__pin--dest {
   background: #c0392b;
+}
+
+/* GPS / locate button — shown in place of the pin when the field is empty */
+.search-field__locate {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #2563eb;
+  transition: background 0.12s;
+}
+
+.search-field__locate:active {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.search-field__locate svg {
+  width: 18px;
+  height: 18px;
+}
+
+.search-field__locate--spin svg {
+  animation: sf-spin 0.8s linear infinite;
+}
+
+@keyframes sf-spin {
+  to { transform: rotate(360deg); }
 }
 
 .search-field__input {
@@ -59,6 +92,40 @@
 /* Hide the browser-native search clear button (we have our own) */
 .search-field__input::-webkit-search-cancel-button {
   -webkit-appearance: none;
+}
+
+/* Map-pick toggle button */
+.search-field__mappick {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #bbb;
+  transition: color 0.12s, background 0.12s;
+}
+
+.search-field__mappick:active,
+.search-field__mappick:hover {
+  color: #666;
+}
+
+.search-field__mappick--active {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.search-field__mappick svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Field highlight when map-pick mode is active for this field */
+.search-field--picking {
+  border-color: #2563eb;
+  background: #eff6ff;
 }
 
 .search-field--done {
@@ -87,16 +154,45 @@
   height: 16px;
 }
 
+/* ── Swap button row ── */
+
+.search-panel__swap-row {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.swap-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.swap-btn:active {
+  background: #f0f0f0;
+  border-color: #bbb;
+}
+
+.swap-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* ── Autocomplete dropdown ── */
 
 .sf-wrap {
   position: relative;
   flex: 1;
   min-width: 0;
-}
-
-.sf-wrap .search-field {
-  /* search-field is now inside sf-wrap; keep it full width */
 }
 
 .suggestions {
@@ -144,6 +240,18 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Loading / no-results row */
+.suggestions__status {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #aaa;
+  text-align: center;
+}
+
+.suggestions__status--empty {
+  font-style: italic;
 }
 
 /* Loading pulse on the search panel border */
@@ -209,6 +317,115 @@
   letter-spacing: 0.02em;
 }
 
+/* ── Waypoint pin color ── */
+
+.search-field__pin--waypoint {
+  background: #888;
+}
+
+/* ── Waypoint row ── */
+
+.waypoint-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.waypoint-row__field {
+  flex: 1;
+  min-width: 0;
+}
+
+.waypoint-row__order {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.waypoint-row__move {
+  width: 24px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  transition: background 0.12s, color 0.12s;
+}
+
+.waypoint-row__move:disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.waypoint-row__move:active {
+  background: #eee;
+  color: #333;
+}
+
+.waypoint-row__remove {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #aaa;
+  transition: background 0.12s, color 0.12s;
+}
+
+.waypoint-row__remove:active {
+  background: rgba(0, 0, 0, 0.08);
+  color: #c0392b;
+}
+
+/* ── Saved routes button in mode selector ── */
+
+.mode-saved-btn {
+  width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  background: #f2f2f2;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  margin-left: auto;
+}
+
+.mode-saved-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mode-saved-btn:active {
+  background: #e5e5e5;
+  color: #1a3a2a;
+}
+
+/* ── Add stop button ── */
+
+.add-stop-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background 0.12s;
+  align-self: flex-start;
+}
+
+.add-stop-btn:active {
+  background: rgba(37, 99, 235, 0.08);
+}
+
 /* ── Desktop ── */
 
 @media (min-width: 768px) {
@@ -222,11 +439,21 @@
   .search-panel__inputs {
     flex-direction: row;
     flex: 1;
+    gap: 0;
+    align-items: center;
   }
 
   .sf-wrap,
   .search-field {
     flex: 1;
+  }
+
+  /* On desktop the swap row sits between the two fields as a narrow column */
+  .search-panel__swap-row {
+    height: 44px;
+    width: 40px;
+    flex-shrink: 0;
+    justify-content: center;
   }
 
   .mode-selector {
@@ -243,5 +470,16 @@
 
   .mode-btn__label {
     font-size: 13px;
+  }
+
+  /* When stops are present, keep column layout so waypoints stack vertically */
+  .search-panel--has-stops {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-panel--has-stops .search-panel__inputs {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

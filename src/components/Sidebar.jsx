@@ -9,6 +9,15 @@ function formatDistance(metres) {
     : `${Math.round(metres)} m`
 }
 
+function formatDuration(seconds) {
+  const totalMin = Math.round(seconds / 60)
+  if (totalMin < 1) return '< 1 min'
+  if (totalMin < 60) return `${totalMin} min`
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  return m === 0 ? `${h}h` : `${h}h ${m}min`
+}
+
 function gradeClass(pct) {
   if (pct >= 12) return 'grade--vsteep'
   if (pct >= 8) return 'grade--steep'
@@ -45,6 +54,7 @@ export default function Sidebar({
   mode,
   steps,
   onStartNav,
+  onSaveRoute,
   onHandoffOpen,
   loading,
   error,
@@ -157,6 +167,9 @@ export default function Sidebar({
           <div className="sidebar__scroll">
             <div className="sidebar__stats">
               <StatRow label="Distance" value={formatDistance(stats.distance)} />
+              {stats.duration != null && (
+                <StatRow label="Est. time" value={formatDuration(stats.duration)} />
+              )}
               <StatRow
                 label="Elevation gain"
                 value={`↑ ${Math.round(stats.elevationGain)} m`}
@@ -181,6 +194,16 @@ export default function Sidebar({
                 onClick={onStartNav}
               >
                 Go
+              </button>
+              <button
+                className="sidebar__save-btn"
+                onClick={onSaveRoute}
+                aria-label="Save route"
+                title="Save route"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" />
+                </svg>
               </button>
               <button
                 className="sidebar__handoff-btn"

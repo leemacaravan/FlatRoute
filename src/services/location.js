@@ -1,3 +1,18 @@
+// One-shot current-position request; resolves with { lat, lon } or rejects.
+export function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'))
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      (err) => reject(err),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    )
+  })
+}
+
 const ERROR_MESSAGES = {
   [GeolocationPositionError.PERMISSION_DENIED]: 'Location access denied. Enable it in your browser settings.',
   [GeolocationPositionError.POSITION_UNAVAILABLE]: "Location unavailable. Check your device's GPS.",

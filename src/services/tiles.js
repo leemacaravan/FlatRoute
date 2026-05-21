@@ -6,5 +6,5 @@ export function getTileStyle() {
   if (key) {
     return `https://tiles.stadiamaps.com/styles/outdoors.json?api_key=${key}`
   }
-  return 'https://tiles.openfreemap.org/styles/liberty'
+  return 'https://tiles.openfreemap.org/styles/bright'
 }

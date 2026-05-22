@@ -24,13 +24,13 @@
 /* ── Handle (mobile drag/tap target) ── */
 
 .sidebar__handle {
-  height: 56px;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0 calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
+  padding: 0 calc(16px + env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) calc(16px + env(safe-area-inset-left, 0px));
   font-size: 15px;
   font-weight: 600;
   color: #2a2a2a;

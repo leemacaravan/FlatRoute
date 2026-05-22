@@ -5,12 +5,14 @@ import { getTileStyle } from '../services/tiles.js'
 import './Map.css'
 
 export const MARKER_ICONS = [
-  { id: 'dot',    label: 'Dot',    emoji: null },
-  { id: 'car',    label: 'Car',    emoji: '🚗' },
-  { id: 'bike',   label: 'Bike',   emoji: '🚴' },
-  { id: 'walk',   label: 'Walker', emoji: '🚶' },
-  { id: 'star',   label: 'Star',   emoji: '⭐' },
-  { id: 'paw',    label: 'Paw',    emoji: '🐾' },
+  { id: 'dot',    label: 'Dot',          emoji: null   },
+  { id: 'car',    label: 'Car',          emoji: '🚗'   },
+  { id: 'bike-m', label: 'Cyclist (man)',   emoji: '🚴‍♂️' },
+  { id: 'bike-f', label: 'Cyclist (woman)', emoji: '🚴‍♀️' },
+  { id: 'walk-m', label: 'Walker (man)',    emoji: '🚶‍♂️' },
+  { id: 'walk-f', label: 'Walker (woman)',  emoji: '🚶‍♀️' },
+  { id: 'star',   label: 'Star',         emoji: '⭐'   },
+  { id: 'paw',    label: 'Paw',          emoji: '🐾'   },
 ]
 
 const SF_CENTER = [-122.4194, 37.7749]

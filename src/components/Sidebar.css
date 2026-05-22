@@ -12,7 +12,7 @@
   display: flex;
   flex-direction: column;
   max-height: 72vh;
-  transform: translateY(calc(100% - 56px));
+  transform: translateY(calc(100% - 56px - env(safe-area-inset-bottom, 0px)));
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
 }
@@ -30,7 +30,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0 16px;
+  padding: 0 calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
   font-size: 15px;
   font-weight: 600;
   color: #2a2a2a;
@@ -81,7 +81,7 @@
 /* Non-scrolling area above the stats */
 .sidebar__top {
   flex-shrink: 0;
-  padding: 8px 16px 0;
+  padding: 8px calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
 }
 
 /* Scrollable middle */
@@ -90,13 +90,13 @@
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 16px 8px;
+  padding: 0 calc(16px + env(safe-area-inset-right, 0px)) 8px calc(16px + env(safe-area-inset-left, 0px));
 }
 
 /* Non-scrolling footer */
 .sidebar__footer {
   flex-shrink: 0;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  padding: 10px calc(16px + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   border-top: 1px solid #f0f0f0;
 }
 

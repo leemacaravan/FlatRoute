@@ -6,6 +6,7 @@
 /* Lift the bottom-right controls above the sidebar handle on mobile */
 .map-container .maplibregl-ctrl-bottom-right {
   bottom: 60px;
+  right: env(safe-area-inset-right, 0px);
 }
 
 @media (min-width: 768px) {
@@ -20,7 +21,7 @@
 .map-locate-btn {
   position: absolute;
   bottom: 72px;
-  right: 10px;
+  right: calc(10px + env(safe-area-inset-right, 0px));
   z-index: 10;
   width: 44px;
   height: 44px;
@@ -63,7 +64,7 @@
 .map-icon-btn {
   position: absolute;
   bottom: 122px;
-  right: 10px;
+  right: calc(10px + env(safe-area-inset-right, 0px));
   z-index: 10;
   width: 44px;
   height: 44px;
@@ -88,7 +89,7 @@
 .map-icon-picker {
   position: absolute;
   bottom: 172px;
-  right: 10px;
+  right: calc(10px + env(safe-area-inset-right, 0px));
   z-index: 20;
   background: #fff;
   border-radius: 12px;

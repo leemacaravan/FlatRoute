@@ -221,6 +221,49 @@
   color: #d97706;
 }
 
+/* ── Grade color legend ── */
+
+.grade-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  padding: 10px 12px;
+  margin: 4px 0 10px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.grade-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.grade-legend__swatch {
+  width: 18px;
+  height: 4px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.grade-legend__swatch--flat     { background: #2d6a4f; }
+.grade-legend__swatch--moderate { background: #ca8a04; }
+.grade-legend__swatch--steep    { background: #ea580c; }
+.grade-legend__swatch--vsteep   { background: #dc2626; }
+
+.grade-legend__label {
+  color: #444;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.grade-legend__range {
+  color: #888;
+  font-size: 11px;
+  font-weight: 400;
+}
+
 /* ── Stats ── */
 
 .sidebar__stats {

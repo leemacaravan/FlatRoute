@@ -26,10 +26,17 @@ function gradeClass(pct) {
 }
 
 const STEEP_LABELS = {
-  driving: { pct: 15, who: 'drivers' },
-  cycling: { pct: 8, who: 'cyclists' },
-  walking: { pct: 12, who: 'walkers' },
+  driving: { pct: 15, who: 'drivers',  colorName: 'red',    intensityLabel: 'very steep' },
+  cycling: { pct: 8,  who: 'cyclists', colorName: 'orange', intensityLabel: 'steep' },
+  walking: { pct: 12, who: 'walkers',  colorName: 'red',    intensityLabel: 'very steep' },
 }
+
+const GRADE_LEGEND = [
+  { cls: 'flat',     label: 'Flat',       range: '0–4%'  },
+  { cls: 'moderate', label: 'Moderate',   range: '4–8%'  },
+  { cls: 'steep',    label: 'Steep',      range: '8–12%' },
+  { cls: 'vsteep',   label: 'Very steep', range: '12%+'  },
+]
 
 function StatRow({ label, value, valueClass }) {
   return (
@@ -135,7 +142,7 @@ export default function Sidebar({
                   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
                   </svg>
-                  Contains sections above {warnInfo.pct}% — challenging for {warnInfo.who}
+                  Contains {warnInfo.intensityLabel} ({warnInfo.colorName}) sections above {warnInfo.pct}% — challenging for {warnInfo.who}
                 </div>
               )}
             </>
@@ -179,6 +186,16 @@ export default function Sidebar({
                 value={`${stats.maxGrade.toFixed(1)}%`}
                 valueClass={gradeClass(stats.maxGrade)}
               />
+            </div>
+            <div className="grade-legend" aria-label="Route color key">
+              {GRADE_LEGEND.map(({ cls, label, range }) => (
+                <span key={cls} className="grade-legend__item">
+                  <span className={`grade-legend__swatch grade-legend__swatch--${cls}`} aria-hidden="true" />
+                  <span className="grade-legend__label">
+                    {label}<span className="grade-legend__range"> {range}</span>
+                  </span>
+                </span>
+              ))}
             </div>
             <ElevationChart data={chartData} onHover={onChartHover} />
             <DirectionsList steps={steps} />

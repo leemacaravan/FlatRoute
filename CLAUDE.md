@@ -61,6 +61,12 @@ sections with these cutoffs:
 Mode-aware warnings: warn cyclists at 8%+, walkers at 12%+, drivers at 15%+.
 Map color coding is the same for all modes.
 
+A legend explaining these colors must be visible in the UI — users cannot be
+expected to guess that red means steep. The legend colors must exactly match
+the route line and the elevation chart. Steep-section warnings should reference
+the color (e.g. "includes red, very steep sections") so the map and the
+warning text reinforce each other.
+
 ## v1 — hill-avoidance core — COMPLETE
 
 All of v1 is built and working:
@@ -108,6 +114,33 @@ the browser only updates location while the app is open and on screen.
 Background/screen-off navigation needs the native wrap (v3). Build the
 navigation UI now; it will simply work better once wrapped. Do not fake
 background location.
+
+## v1.5 — UX additions — CURRENT WORK
+
+Alongside navigation, these usability features are in scope:
+- Color legend explaining the route steepness colors (see Grade thresholds).
+- Swap button to switch the From and To locations instantly.
+- "Use current location" option for origin/destination via Geolocation API.
+- Easier search: fast reliable autocomplete, clear results (name + street +
+  neighborhood + city), visible "no results" state, Bay Area bias, and
+  set-a-point-by-tapping-the-map.
+- Intermediate stops: add, reorder, and remove waypoints; route recalculates
+  through all stops.
+- Ballpark trip duration shown in the sidebar, clearly labeled an estimate
+  (ORS free tier has no live traffic, so driving times are no-traffic
+  estimates — do not imply traffic-aware precision).
+- Easy cancel: an always-visible one-tap End/Cancel during navigation.
+- Mute toggle for navigation voice/sound; the setting is remembered.
+- Custom location-marker icon chosen from a small set of simple, original
+  icons (NO copyrighted characters — keeps the app licensing-clean).
+- Save locations and routes; saved items persist in localStorage. Note: this
+  does not sync across devices — acceptable for now, revisit post-Capacitor.
+- External handoff fix: when a route has no user-added stops, the Google /
+  Apple / Waze handoff passes ONLY origin and destination — no extra
+  waypoints. Waypoints are included only when the user added stops.
+
+Build these in small focused batches, each tested before the next — do not
+attempt all at once.
 
 ## Long-term target: this becomes a mobile app
 
